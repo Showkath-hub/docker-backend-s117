@@ -1,0 +1,31 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: ecommerce-db1
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: ecommerce
+    volumes:
+      - mysql_data:/var/lib/mysql   # ← persistent MySQL data
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p1234"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+                                                                                                backend:
+    build: .
+    container_name: ecommerce-backend1
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/ecommerce?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
+volumes:
+  mysql_data: {}
